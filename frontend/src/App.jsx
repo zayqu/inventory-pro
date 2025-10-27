@@ -1,7 +1,7 @@
 import './App.css'
 import  {BrowserRouter as Router, Route, Routes} from 'react-router'
 import Root from './components/Root'
-import Login from './pages/Login'
+import Login from './pages/login'
 
 function App() {
 
