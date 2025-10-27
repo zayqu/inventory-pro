@@ -19,9 +19,8 @@ const Login = () => {
     setLoading(true);
     setError(null);
 
-<<<<<<< HEAD
     try {
-      const response = await axios.post("http://localhost:3000/api/auth/login", {
+      const response = await axios.post("http://192.168.100.49:3000/api/auth/login", {
         email, password,});
 
       if (response.data.success) {
@@ -42,17 +41,6 @@ const Login = () => {
       setLoading(false);
     }
   };
-=======
-                    if (response.data.status) {
-                    }
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            } 
-        }
-    }
->>>>>>> b5c61c060aa9280398f4afd270a3b3828de1495b
 
   return (
     <>
