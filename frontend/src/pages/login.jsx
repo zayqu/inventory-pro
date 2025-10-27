@@ -17,13 +17,14 @@ const Login = () => {
                     email: email});
 
                     if (response.data.status) {
-              
+                    }
             } catch (err) {
                 setError(err.message);
             } finally {
                 setLoading(false);
             } 
         }
+    }
 
 const [showPassword, setShowPassword] = useState(false);
 
