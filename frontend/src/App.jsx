@@ -24,6 +24,7 @@ function App() {
                 </div>
               </ProtectedRoutes>
             }
+            
           />
 
           <Route
