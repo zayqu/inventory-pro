@@ -19,7 +19,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.100.49:3000/api/auth/login",
+        "http://localhost:3000/api/auth/login",
         { email, password }
       );
 
