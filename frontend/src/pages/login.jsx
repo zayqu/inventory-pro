@@ -32,12 +32,14 @@ const Login = () => {
           return;
         }
 
+        localStorage.setItem("pos-token", response.data.token);
+
         login(userData, response.data.token);
 
         if (userData.role === "admin") {
-          navigate("/admin/dashboard");
+          navigate("/admin-dashboard");
         } else if (userData.role === "customer") {
-          navigate("/customer/dashboard");
+          navigate("/customer-dashboard");
         } else {
           navigate("/unauthorized");
         }
