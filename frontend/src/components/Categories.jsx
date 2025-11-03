@@ -1,9 +1,25 @@
-import React, {useState} from "react";
-import axios from "axios";
+import React, {useState} from 'react';
+import axios from 'axios';
 
 const Categories = () => {
     const [categoryName, setCategoryName] = useState("");
     const [categoryDescription, setCategoryDescription] = useState("");
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await axios.get("http://localhost:3000/api/category/get", {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("pos-token")}`,
+                    },
+                });
+            }
+        }
+
+    }, 
+    
+    
+);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -13,18 +29,19 @@ const Categories = () => {
             {
               headers: {
                     Authorization: `Bearer ${localStorage.getItem("pos-token")}`,
-             },
+                },
             }
         );
+        
         if (response.data.success) {
+               setCategoryName("");
+               setCategoryDescription("");
              alert("Category added succesfully!");
-             setCategoryName("");
-             setCategoryDescription("");
-            } else {
+        } else {
                 console.error("Error adding category", data);
-                alert("Error adding category. Please try again");
-            }
-        };
+                alert("Error adding category. Please try again.");
+        }
+    };
 
     return (
         <div className="p-10">
