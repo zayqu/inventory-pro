@@ -31,10 +31,16 @@ const authMiddleware = async (req, res, next) => {
 
         req.user = user;
         next();
-    } catch (error) {
+    } /* catch (error) {
         console.error("Error in authMiddleware:", error);
         return res.status(500).json({ success: false, message: "Internal server error in middleware" });
-    }
+    } */
+
+    catch (error) {
+    console.error("Error in authMiddleware:", error.message);
+    return res.status(500).json({ success: false, message: error.message });
+}
+
 };
 
 export default authMiddleware;
