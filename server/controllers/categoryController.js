@@ -1,14 +1,10 @@
 import Category from '../models/Category.js';
 
-// Add a new category
+// Add Category
 const addCategory = async (req, res) => {
   try {
-    console.log("Incoming category data:", req.body);
-    console.log("addCategory called with:", req.body);
-
     const { categoryName, categoryDescription } = req.body;
 
-    // Check if the category already exists
     const existingCategory = await Category.findOne({ categoryName });
     if (existingCategory) {
       return res
@@ -16,36 +12,63 @@ const addCategory = async (req, res) => {
         .json({ success: false, message: 'Category already exists' });
     }
 
-    // Create a new category
-    const newCategory = new Category({
-      categoryName,
-      categoryDescription,
-    });
-
+    const newCategory = new Category({ categoryName, categoryDescription });
     await newCategory.save();
+
     return res
       .status(201)
-      .json({ success: true, message: 'Category added successfully' });
-  } catch (error) {
-    console.error('Error adding category:', error);
-    return res
-      .status(500)
-      .json({ success: false, message: 'Server error' });
+      .json({ success: true, message: 'Category added successfully', category: newCategory });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-// Get all categories
+// Get Categories
 const getCategories = async (req, res) => {
   try {
     const categories = await Category.find();
     return res.status(200).json({ success: true, categories });
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    return res
-      .status(500)
-      .json({ success: false, message: 'Server error in getting categories' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-// ✅ Export both functions
-export { addCategory, getCategories };
+// Delete Category
+const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Category.findByIdAndDelete(id);
+    if (!deleted)
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    return res.status(200).json({ success: true, message: 'Category deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// Edit Category
+const editCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { categoryName, categoryDescription } = req.body;
+
+    const updated = await Category.findByIdAndUpdate(
+      id,
+      { categoryName, categoryDescription },
+      { new: true }
+    );
+
+    if (!updated)
+      return res.status(404).json({ success: false, message: 'Category not found' });
+
+    return res.status(200).json({ success: true, message: 'Category updated successfully', category: updated });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+export { addCategory, getCategories, deleteCategory, editCategory };
