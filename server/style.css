@@ -1,0 +1,590 @@
+/* ---------------------------
+  Cleaned & deduplicated CSS
+  (for https://libertygroup.co.tz/)
+  --------------------------- */
+
+/* Small helpers / widget paddings */
+#text-4,
+.header-v1 .cargo-office-location-widget,
+.header-v2 .cargo-office-location-widget {
+  padding-left: 0;
+}
+.header-v4 #cargohub-social-links-widget-2,
+.topbar .cargo-search-widget {
+  padding-right: 0;
+}
+
+/* Footer social widget top border */
+.header-v3 .footer-widgets .cargohub-social-links-widget,
+.header-v4 .footer-widgets .cargohub-social-links-widget {
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Force navigation menu to align right */
+.site-menu,
+.main-nav,
+#site-navigation {
+  float: right;          /* keeps menu right-aligned */
+  text-align: right;
+}
+
+/* Ensure inline menu items (avoid RTL float issues) */
+.nav ul.menu {
+  text-align: right;
+  width: 100%;
+}
+.nav ul.menu > li {
+  float: none;
+  display: inline-block;
+}
+
+/* Global heading sizing (consistent)
+   NOTE: consolidated with the stronger global rule below (keeps final effective styles)
+*/
+h1, h2, h3, h4, h5, h6,
+.page-title, .entry-title, .section-title,
+.header-title, .widget-title, .fh-section-title {
+  font-size: 20px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+/* Body copy standardization (keep theme responsive) */
+body,
+.entry-content,
+.widget_text,
+.text-block,
+.fh-service-box p,
+.fh-section-description {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Paragraphs & list spacing */
+p { margin: 0 0 15px; }
+ul li, ol li { margin-bottom: 8px; }
+
+/* Default state for feature box chars */
+.fh-feature-box .chars {
+  background-color: transparent;
+  color: #fff; /* default text color */
+  border: 2px solid #244580; /* match your square border */
+  transition: background-color 0.3s ease, color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover only the small box */
+.fh-feature-box .chars:hover {
+  background-color: #244580;
+  color: #fff;
+}
+
+/* Feature icon / hover (single consolidated block) */
+.fh-icon,
+span.fh-icon,
+.fh-feature-box .icon,
+.fh-service-box .icon,
+.feature .icon {
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.fh-icon i,
+.fh-feature-box .icon i,
+.fh-service-box .icon i,
+.feature .icon i {
+  color: #d9262d; /* default red icon */
+  transition: all 0.3s ease;
+}
+.fh-icon:hover,
+.fh-feature-box .icon:hover,
+.fh-service-box .icon:hover,
+.feature .icon:hover {
+  background: #244580;
+  border-color: #244580;
+}
+.fh-icon:hover i,
+.fh-feature-box .icon:hover i,
+.fh-service-box .icon:hover i,
+.feature .icon:hover i {
+  color: #ffffff;
+}
+
+/* Active/current menu items in widgets
+   (merged duplicates — final effective values preserved:
+    color uses #eb2f06 with !important, font-weight set to 300 per last occurrence)
+*/
+.widget_nav_menu .current-menu-item > a,
+.widget_nav_menu .current_page_item > a,
+.widget_nav_menu li:hover > a {
+  color: #eb2f06 !important;
+  font-weight: 300;
+}
+
+/* Small arrow fix for category / menu widgets */
+.widget_categories li:after,
+.widget_pages li:after,
+.widget_archive li:after,
+.widget_nav_menu li:after,
+.widget_recent_entries li:after,
+.widget_meta li:after,
+ul.service-menu li:after {
+  content: '\f105';
+  position: absolute;
+  top: 15px;
+  right: 0;
+  font-size: 16px;
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  color: #848484;
+  transition: color 0.3s ease;
+}
+.widget_nav_menu li:hover:after,
+.widget_nav_menu .current-menu-item:after,
+.widget_nav_menu .current_page_item:after {
+  color: #d9262d;
+}
+
+/* Footer headings & body text */
+.footer-widget h3,
+.footer-widget-title,
+.footer-widgets .widget-title {
+  font-size: 20px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 10px;
+  text-transform: Uppercase;
+}
+.footer-widget p,
+.footer-widget li,
+.footer-widget li a,
+.footer-widget span,
+.cargo-footer p,
+.cargo-footer li,
+.cargo-footer a {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #ffffff;
+}
+
+/* Footer layout: responsive flex with wrapping (safer than fixed transform) */
+.footer-widgets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 30px 5%;
+}
+.footer-widgets .widget {
+  flex: 1 1 220px; /* min column width, will wrap on small screens */
+  min-width: 220px;
+}
+
+/* PHONE / MOBILE & small screen rules (merged two mobile blocks into one) */
+@media only screen and (max-width: 768px) {
+  h1,h2,h3,h4,h5,h6,
+  .page-title, .entry-title, .section-title,
+  .header-title, .widget-title, .fh-section-title,
+  .footer-widget h3, .footer-widget-title {
+    font-size: 18px;
+    line-height: 1.4;
+    font-weight: 700;
+    text-transform: uppercase; /* you can remove if you don't want uppercase on mobile */
+    margin-bottom: 10px;
+  }
+
+  body, p, span, li, a, strong, em,
+  .footer-widget p, .footer-widget li, .footer-widget li a {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .main-navigation ul li a,
+  .header-menu a {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .footer-widgets {
+    flex-direction: column;
+    gap: 20px;
+    padding-left: 5%;
+    padding-right: 5%;
+  }
+
+  .footer-widgets .widget { flex: 1 1 100%; min-width: 0; }
+
+  ul li, ol li, .footer-widget ul li, .footer-widget ol li { margin-bottom: 6px; }
+
+  /* PHONE ONLY — center buttons */
+  .fh-button, .fh-btn, a.fh-button, a.fh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60%;
+    height: 50px;
+    padding: 0 20px;
+    line-height: 1;
+  }
+  .fh-button:hover, .fh-btn:hover, a.fh-button:hover, a.fh-btn:hover {
+    background: #1b3564;
+    color: #fff;
+  }
+
+  /* centered feature icon look on mobile */
+  .fh-icon,
+  span.fh-icon,
+  .fh-feature-box .icon,
+  .fh-service-box .icon,
+  .feature .icon {
+    margin: 0 auto 15px;
+    width: 56px;
+    height: 56px;
+    box-shadow: none;
+    border: 1px solid rgba(36,69,128,0.08);
+  }
+  .fh-icon i,
+  .fh-feature-box .icon i,
+  .fh-service-box .icon i,
+  .feature .icon i {
+    font-size: 26px;
+    color:  #d9262d;
+    line-height: 1;
+  }
+  .fh-feature-box .title,
+  .feature h4,
+  .fh-service-box .title { text-align: center; padding-left: 0; margin-top: 5px; }
+  .fh-feature-box p, .feature p, .fh-service-box p { text-align: center; margin-top: 8px; }
+
+  /* MOBILE ONLY alignment for contact-follow (merged) */
+  .contact-follow .social-icon,
+  .contact-follow a {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .contact-follow .social-icon i {
+    margin-right: 6px; /* space between icon & name */
+  }
+
+  .contact-follow .instagram-label {
+    font-size: 20px;
+    color: #1e3c72; /* adjust to your theme color */
+    font-weight: 500;
+  }
+  
+}
+
+/* Extra small (up to 480px) and very small (320px) scale-down */
+@media only screen and (max-width: 480px) {
+  h1,h2,h3,h4,h5,h6, .footer-widget h3 { font-size: 18px; }
+  body, p, span, li, a { font-size: 16px; }
+	
+	h4.box-title {
+    text-transform: capitalize !important;
+}
+}
+@media only screen and (max-width: 320px) {
+  h1,h2,h3,h4,h5,h6, .footer-widget h3 { font-size: 18px; }
+  body, p, span, li, a { font-size: 16px; }
+}
+
+@media only screen and (max-width: 768px) {
+    .fh-feature-box p, .feature p, .fh-service-box p {
+        text-align: left;
+        margin-top: 8px;
+    }
+}
+
+/* Hover state: RED (theme color) */
+.footer-widgets ul li a:hover,
+.footer-widget ul li a:hover,
+.cargo-footer ul li a:hover {
+  color: #eb2f06 !important;
+}
+
+/* ==========================================================
+   SHOW USERNAME BESIDE ICON (DESKTOP + MOBILE)
+   ========================================================== */
+
+/* .contact-follow container & basic styling (merged stray rules that were malformed) */
+.contact-follow {
+  display: inline-block;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* Put icon + text side-by-side */
+.contact-follow a[href*="instagram.com"] {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px; /* space between icon & text */
+}
+
+/* Layout: keep your current column layout (you can keep/remove this if you like) */
+.footer-sidebars {
+  display: flex;
+  flex-wrap: nowrap;           /* keep all 3 on one row */
+  justify-content: space-between; /* even spacing between the 3 columns */
+  align-items: flex-start;
+}
+
+
+/* Left-align ALL footer text (titles, links, paragraphs, icons, etc.) */
+.footer-sidebars .widget,
+.footer-sidebars .widget * {
+  text-align: left !important;
+}
+
+/* Optional: spacing / width of each column */
+.footer-sidebars .widget {
+  max-width: 330px;
+  width: 100%;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Remove menu bullet/arrow icons */
+.footer-sidebars .widget_nav_menu li::before {
+  display: none !important;
+}
+
+/* Remove arrows from footer WPBakery/Theme menus */
+.footer-sidebar .widget_nav_menu .menu li a::after,
+.footer-sidebar .widget_nav_menu .menu li a::before,
+.footer-sidebar .widget_nav_menu .menu li::after,
+.footer-sidebar .widget_nav_menu .menu li::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* All headings use same size everywhere (strong rule from original; kept with !important) */
+body h1, body h2, body h3, body h4, body h5, body h6,
+body .page-title,
+body .entry-title,
+body .section-title,
+body .header-title,
+body .widget-title,
+body .fh-section-title {
+  font-size: 20px !important;
+  line-height: 1.5 !important;
+  font-weight: 700 !important;
+}
+
+/* WHAT WE DO page – OUR SERVICES section */
+.page-id-27 .footer-sidebars .widget:nth-child(2) a {
+    color: #ffffff !important;   /* white default */
+}
+
+/* Hover, focus, active */
+.page-id-27 .footer-sidebars .widget:nth-child(2) a:hover,
+.page-id-27 .footer-sidebars .widget:nth-child(2) a:focus,
+.page-id-27 .footer-sidebars .widget:nth-child(2) .current-menu-item > a {
+    color: #ff0000 !important;   /* red hover/click */
+}
+
+.widget_nav_menu .current-menu-item > a, .widget_nav_menu .current_page_item > a, .widget_nav_menu li:hover > a {
+    color: #fff !important;
+    font-weight: 300;
+}
+
+.footer-sidebars .widget {
+  max-width: none;              /* don’t shrink the content box */
+  width: 100%;                  /* fill its column */
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Shift entire footer content slightly to the right */
+.footer-sidebars .container .row {
+    justify-content: flex-start !important;
+    padding-left: 70px;   /* adjust to move right */
+}
+
+/* Make columns keep equal spacing */
+.footer-sidebars .footer-sidebar {
+    flex: 0 0 31%;
+    max-width: 31%;
+}
+
+/* Move only the middle footer column ("OUR SERVICES") slightly to the right */
+.footer-sidebars .footer-sidebar.footer-2 {
+    margin-left: 70px !important;   /* adjust value */
+}
+
+/* MOBILE + TABLET: Center all footer columns and content */
+@media only screen and (max-width: 1024px) {
+
+  /* Stack columns */
+  .footer-sidebars .container .row {
+      flex-direction: column !important;
+      align-items: center !important;
+      text-align: center !important;
+      gap: 25px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+  }
+
+  /* Center each widget */
+  .footer-sidebars .footer-sidebar {
+      flex: 0 0 100% !important;
+      max-width: 100% !important;
+      text-align: center !important;
+  }
+
+  /* Center text inside widgets */
+  .footer-sidebars .widget,
+  .footer-sidebars .widget * {
+      text-align: center !important;
+  }
+}
+
+/* MOBILE + TABLET RESET: remove desktop margin for OUR SERVICES */
+@media only screen and (max-width: 1024px) {
+    .footer-sidebars .footer-sidebar.footer-2 {
+        margin-left: 0 !important;
+    }
+}
+
+.footer-widgets .menu li {
+    padding: 0 0 0 1px;
+    border: 0;
+}
+
+/* SAFARI ONLY FIX (macOS + iOS) */
+@supports (-webkit-touch-callout: none) {
+  
+  /* Allow footer items to shrink properly on mac Safari */
+  .footer-widgets .widget,
+  .footer-sidebars .footer-sidebar {
+      min-width: 0 !important;
+      flex: 1 1 220px !important;
+  }
+
+  /* Allow wrapping in Safari if needed */
+  .footer-widgets,
+  .footer-sidebars {
+      flex-wrap: wrap !important;
+  }
+
+  /* Remove offsets only in Safari */
+  .footer-sidebars .container .row,
+  .footer-sidebars .footer-sidebar.footer-2 {
+      padding-left: 0 !important;
+      margin-left: 0 !important;
+  }
+}
+
+/* ---------- Force footer back into document flow ---------- */
+/* Paste at the very end of your stylesheet (after other overrides) */
+
+footer,
+#colophon,
+.site-footer,
+.cargo-footer,
+.footer-widgets,
+.footer-sidebars,
+.footer-wrapper,
+.widget-area.footer-widgets,
+.footer {
+  position: static !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  left: auto !important;
+  right: auto !important;
+  z-index: 2 !important;
+  display: block !important;
+}
+
+/* Make sure content area can grow (undo any absolute/fixed layout) */
+html, body, #page, .site, .site-wrapper, .container-wrapper {
+  height: auto !important;
+  min-height: 100% !important;
+  display: block !important;
+}
+
+/* Ensure main content stretches so footer sits below it */
+.site-content,
+.main,
+.content-area,
+.page-content,
+#main {
+  position: relative !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 40px !important; /* small breathing room — adjust lower if you like */
+  z-index: 1 !important;
+}
+
+/* Clear any transforms or fixed positioning created by JS */
+*[style*="position:fixed"],
+*[style*="position:absolute"] {
+  -webkit-transform: none !important;
+  transform: none !important;
+}
+
+/* Make footer columns responsive and avoid min-width overflow */
+.footer-widgets, .footer-sidebars {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 30px;
+}
+.footer-widgets .widget,
+.footer-sidebars .footer-sidebar {
+  flex: 1 1 220px !important;
+  min-width: 0 !important;
+}
+
+.footer-widgets .menu {
+    margin-top: 10px;
+}
+
+.footer-sidebars {
+    padding-top: 60px;
+    padding-bottom: 10px;
+}
+
+
+@media (max-width: 991px) {
+    .foot@media only screen and (max-width: 480px) {
+  h1,h2,h3,h4,h5,h6, .footer-widget h3 { font-size: 18px; }
+  body, p, span, li, a { font-size: 16px; }
+}
+er-sidebar {
+        margin-bottom: 0px;
+    }
+}
+
+
+/* Keep heading size inheritance */
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+}
+
+/* ONLY align Instagram Follow Us heading */
+h4 a[href*="instagram.com"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Ensure icon aligns perfectly */
+h4 a[href*="instagram.com"] i {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
