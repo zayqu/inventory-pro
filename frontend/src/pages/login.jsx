@@ -19,7 +19,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/auth/login",
+        "https://inventory-pro-api-4jnw.onrender.com/api/auth/login",
         { email, password }
       );
 

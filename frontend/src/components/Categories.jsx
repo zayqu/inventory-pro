@@ -73,7 +73,7 @@ const Categories = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:3000/api/category/get",
+        "https://inventory-pro-api-4jnw.onrender.com/api/category/get",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("pos-token")}`,
@@ -112,7 +112,7 @@ const Categories = () => {
 
       if (editingCategory) {
         response = await axios.put(
-          `http://localhost:3000/api/category/edit/${editingCategory._id}`,
+          `https://inventory-pro-api-4jnw.onrender.com/api/category/edit/${editingCategory._id}`,
           payload,
           {
             headers: {
@@ -122,7 +122,7 @@ const Categories = () => {
         );
       } else {
         response = await axios.post(
-          "http://localhost:3000/api/category/add",
+          "https://inventory-pro-api-4jnw.onrender.com/api/category/add",
           payload,
           {
             headers: {
@@ -160,7 +160,7 @@ const Categories = () => {
 
     try {
       const response = await axios.delete(
-        `http://localhost:3000/api/category/delete/${categoryId}`,
+        `https://inventory-pro-api-4jnw.onrender.com/api/category/delete/${categoryId}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("pos-token")}`,
@@ -184,7 +184,7 @@ const Categories = () => {
     
     try {
       await Promise.all(selectedItems.map(id => 
-        axios.delete(`http://localhost:3000/api/category/delete/${id}`, {
+        axios.delete(`https://inventory-pro-api-4jnw.onrender.com/api/category/delete/${id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("pos-token")}` },
         })
       ));
