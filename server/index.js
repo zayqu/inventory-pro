@@ -8,19 +8,15 @@ import authRoutes from './routes/auth.js';
 import categoryRoutes from './routes/category.js';
 import productRoutes from './routes/product.js';
 
-
-
 const app = express();
 
-// CORS (frontend access)
+// CORS (frontend access) - Fixed URL (no trailing space)
 app.use(cors({
   origin: 'https://inventory-pro-two.vercel.app',
   credentials: true
 }));
 
-// Add this line with your other routes
-app.use('/api/product', productRoutes);
-
+// IMPORTANT: Body parser MUST come before routes
 app.use(express.json());
 
 // ✅ Health check route
@@ -31,6 +27,7 @@ app.get('/', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/category', categoryRoutes);
+app.use('/api/product', productRoutes);
 
 const PORT = process.env.PORT || 3000;
 

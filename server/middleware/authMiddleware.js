@@ -5,7 +5,6 @@ const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    // Check if Authorization header exists and is valid
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
@@ -22,7 +21,6 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     if (!decoded || (!decoded.id && !decoded._id)) {
@@ -32,7 +30,6 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Find user
     const user = await User.findById(decoded.id || decoded._id).select("-password");
 
     if (!user) {
@@ -42,7 +39,13 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Attach user to request
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: "User account is disabled",
+      });
+    }
+
     req.user = user;
 
     next();
@@ -70,8 +73,7 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-// Add this at the bottom of your existing file, before the export
-
+// Role restriction middleware
 export const restrictTo = (...roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.user.role)) {
@@ -84,4 +86,5 @@ export const restrictTo = (...roles) => {
     };
 };
 
-export { authMiddleware as default, restrictTo };
+// Single export at the bottom
+export { authMiddleware as default };
