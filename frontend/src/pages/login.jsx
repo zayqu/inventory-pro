@@ -37,9 +37,9 @@ const Login = () => {
         login(userData, response.data.token);
 
         if (userData.role === "admin") {
-          navigate("/admin-dashboard");
+          navigate("/admin");
         } else if (userData.role === "customer") {
-          navigate("/customer-dashboard");
+          navigate("/customer");
         } else {
           navigate("/unauthorized");
         }

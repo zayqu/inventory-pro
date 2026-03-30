@@ -5,7 +5,9 @@ import Login from './pages/login';
 import ProtectedRoutes from '../utils/ProtectedRoutes.jsx';
 import { AuthProvider } from '../src/context/AuthContext.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import DashboardOverview from './pages/DashboardOverview.jsx';
 import Categories from './components/Categories.jsx';
+import More from './pages/More.jsx';
 
 function App() {
   return (
@@ -15,7 +17,7 @@ function App() {
           <Route path="/" element={<Root />} />
 
           <Route
-            path="/admin-dashboard"
+            path="/admin"
             element={
               <ProtectedRoutes requireRole={["admin"]}>
                <Dashboard />
@@ -24,7 +26,7 @@ function App() {
           > 
              <Route 
                 index
-                element={<h1>Summary of dashboard</h1>}
+                element={<DashboardOverview />}
                 /> 
 
              <Route 
@@ -33,24 +35,32 @@ function App() {
                 />
                 <Route 
                 path="products"
-                element={<h1>Products</h1>}
+                element={<h1 className="p-8 text-2xl font-bold">Products</h1>}
                 />
                 <Route 
                 path="suppliers"
-                element={<h1>Suppliers</h1>}
+                element={<h1 className="p-8 text-2xl font-bold">Suppliers</h1>}
                 />
                 <Route 
                 path="orders"
-                element={<h1>Orders</h1>}
+                element={<h1 className="p-8 text-2xl font-bold">Orders</h1>}
                 />
                 <Route 
                 path="users"
-                element={<h1>Users</h1>}
+                element={<h1 className="p-8 text-2xl font-bold">Users</h1>}
+                />
+                <Route 
+                path="profile"
+                element={<h1 className="p-8 text-2xl font-bold">Profile</h1>}
+                />
+                <Route 
+                path="more"
+                element={<More />}
                 />
               </Route>
 
           <Route
-            path="/customer/dashboard"
+            path="/customer"
             element={
               <ProtectedRoutes requireRole={["customer"]}>
                 <div className="p-4 md:p-10">

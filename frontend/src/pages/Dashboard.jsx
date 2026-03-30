@@ -1,18 +1,21 @@
 
 import React from 'react'
 import Sidebar from '../components/Sidebar'
+import BottomNav from '../components/BottomNav'
 import { Outlet } from 'react-router'
 
 const Dashboard = () => {
     return (
-        <div>
-            <div className='flex'> 
-                <Sidebar />
+        <div className="min-h-screen bg-gray-50">
+            <Sidebar />
+            
+            {/* Main content area */}
+            <main className="md:ml-64 pb-20 md:pb-0 min-h-screen">
+                <Outlet />
+            </main>
 
-                <div className='flex-1 ml-16 md:ml-64 bg-gray-100 min-h-screen'>
-                    <Outlet />
-                </div>
-            </div>
+            {/* Bottom navigation for mobile */}
+            <BottomNav />
         </div>
     )
 }
