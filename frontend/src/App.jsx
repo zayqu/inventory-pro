@@ -8,6 +8,9 @@ import Dashboard from './pages/Dashboard.jsx';
 import DashboardOverview from './pages/DashboardOverview.jsx';
 import Categories from './components/Categories.jsx';
 import More from './pages/More.jsx';
+import Products from './components/Products.jsx';
+
+
 
 function App() {
   return (

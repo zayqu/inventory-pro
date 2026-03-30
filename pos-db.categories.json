@@ -1,0 +1,70 @@
+[{
+  "_id": {
+    "$oid": "691a009aedc020940d7adbe6"
+  },
+  "categoryName": "home",
+  "categoryDescription": "",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69c94100b113b9dbb34731d4"
+  },
+  "categoryName": "Water",
+  "categoryDescription": "All Water Brands",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69ca6eaecbb01af9a4b512d8"
+  },
+  "categoryName": "maembe mabichi",
+  "categoryDescription": "maembe mabichi na yalioiva",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69caa6c2fa2812f17144a2fb"
+  },
+  "categoryName": "matango pori",
+  "categoryDescription": "matango machunguyy",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69caaefffa2812f17144a314"
+  },
+  "categoryName": "mahabusu",
+  "categoryDescription": "hh",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69caaf39fa2812f17144a320"
+  },
+  "categoryName": "matango makubwa",
+  "categoryDescription": "hampo",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69cab45c62d17714edf8e385"
+  },
+  "categoryName": "gfdddd",
+  "categoryDescription": "",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69cab7c6fc8a224aec514736"
+  },
+  "categoryName": "mapera",
+  "categoryDescription": "",
+  "createdAt": {
+    "$date": "2026-03-30T17:49:58.208Z"
+  },
+  "updatedAt": {
+    "$date": "2026-03-30T17:49:58.208Z"
+  },
+  "__v": 0
+}]
