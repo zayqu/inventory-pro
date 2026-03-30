@@ -1,291 +1,128 @@
-import Product from "../models/Product.js";
 import Category from "../models/Category.js";
 
-// Add Product
-const addProduct = async (req, res) => {
-    try {
-        const {
-            name,
-            sku,
-            barcode,
-            category,
-            description,
-            costPrice,
-            sellingPrice,
-            quantity,
-            lowStockAlert,
-            supplier,
-            unit
-        } = req.body;
+// Add Category
+const addCategory = async (req, res) => {
+  try {
+    const { categoryName, categoryDescription } = req.body;
 
-        // Validation
-        if (!name || !sku || !category || !costPrice || !sellingPrice) {
-            return res.status(400).json({
-                success: false,
-                message: "Name, SKU, Category, Cost Price, and Selling Price are required"
-            });
-        }
-
-        // Check if SKU exists
-        const existingSKU = await Product.findOne({ sku });
-        if (existingSKU) {
-            return res.status(400).json({
-                success: false,
-                message: "SKU already exists"
-            });
-        }
-
-        // Check if barcode exists (if provided)
-        if (barcode) {
-            const existingBarcode = await Product.findOne({ barcode });
-            if (existingBarcode) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Barcode already exists"
-                });
-            }
-        }
-
-        // Check if category exists
-        const categoryExists = await Category.findById(category);
-        if (!categoryExists) {
-            return res.status(400).json({
-                success: false,
-                message: "Category not found"
-            });
-        }
-
-        const newProduct = new Product({
-            name,
-            sku,
-            barcode,
-            category,
-            description,
-            costPrice: Number(costPrice),
-            sellingPrice: Number(sellingPrice),
-            quantity: Number(quantity) || 0,
-            lowStockAlert: Number(lowStockAlert) || 10,
-            supplier,
-            unit,
-            createdBy: req.user?.id // From auth middleware
-        });
-
-        await newProduct.save();
-
-        return res.status(201).json({
-            success: true,
-            message: "Product added successfully",
-            product: await newProduct.populate('category')
-        });
-    } catch (error) {
-        console.error("Error adding product:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
+    if (!categoryName) {
+      return res.status(400).json({
+        success: false,
+        message: "Category name is required",
+      });
     }
-};
 
-// Get All Products (with search, filter, pagination)
-const getProducts = async (req, res) => {
-    try {
-        const { 
-            search, 
-            category, 
-            lowStock, 
-            page = 1, 
-            limit = 20,
-            sortBy = 'createdAt',
-            order = 'desc'
-        } = req.query;
+    // Check if category exists
+    const existingCategory = await Category.findOne({ categoryName });
 
-        let query = { isActive: true };
-
-        // Search by name, SKU, or barcode
-        if (search) {
-            query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { sku: { $regex: search, $options: 'i' } },
-                { barcode: { $regex: search, $options: 'i' } }
-            ];
-        }
-
-        // Filter by category
-        if (category) {
-            query.category = category;
-        }
-
-        // Filter low stock
-        if (lowStock === 'true') {
-            query.$expr = { $lte: ['$quantity', '$lowStockAlert'] };
-        }
-
-        const skip = (Number(page) - 1) * Number(limit);
-
-        const products = await Product.find(query)
-            .populate('category', 'categoryName')
-            .sort({ [sortBy]: order === 'desc' ? -1 : 1 })
-            .skip(skip)
-            .limit(Number(limit));
-
-        const total = await Product.countDocuments(query);
-
-        // Get low stock count for badge
-        const lowStockCount = await Product.countDocuments({
-            isActive: true,
-            $expr: { $lte: ['$quantity', '$lowStockAlert'] }
-        });
-
-        return res.status(200).json({
-            success: true,
-            products,
-            pagination: {
-                currentPage: Number(page),
-                totalPages: Math.ceil(total / Number(limit)),
-                total,
-                limit: Number(limit)
-            },
-            lowStockCount
-        });
-    } catch (error) {
-        console.error("Error fetching products:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
+    if (existingCategory) {
+      return res.status(400).json({
+        success: false,
+        message: "Category already exists",
+      });
     }
+
+    // Create new category - description defaults to empty string if not provided
+    const newCategory = new Category({
+      categoryName,
+      categoryDescription: categoryDescription || "",
+    });
+
+    await newCategory.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Category added successfully",
+      category: newCategory,
+    });
+  } catch (error) {
+    console.error("Error adding category:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 };
 
-// Get Single Product
-const getProductById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const product = await Product.findById(id).populate('category');
+// Get all categories
+const getCategories = async (req, res) => {
+  try {
+    const categories = await Category.find().sort({ createdAt: -1 });
 
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found"
-            });
-        }
+    return res.status(200).json({
+      success: true,
+      categories,
+    });
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error in getting categories",
+    });
+  }
+};
 
-        return res.status(200).json({
-            success: true,
-            product
-        });
-    } catch (error) {
-        console.error("Error fetching product:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
+// Delete Category
+const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Category.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
     }
+
+    return res.status(200).json({
+      success: true,
+      message: "Category deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 };
 
-// Update Product
-const updateProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updateData = req.body;
+// Edit Category
+const editCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { categoryName, categoryDescription } = req.body;
 
-        // Don't allow SKU change if it conflicts
-        if (updateData.sku) {
-            const existing = await Product.findOne({ 
-                sku: updateData.sku, 
-                _id: { $ne: id } 
-            });
-            if (existing) {
-                return res.status(400).json({
-                    success: false,
-                    message: "SKU already exists"
-                });
-            }
-        }
+    const updated = await Category.findByIdAndUpdate(
+      id,
+      { 
+        categoryName, 
+        categoryDescription: categoryDescription || "" // Handle undefined/empty
+      },
+      { new: true }
+    );
 
-        const updated = await Product.findByIdAndUpdate(
-            id,
-            updateData,
-            { new: true }
-        ).populate('category');
-
-        if (!updated) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found"
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Product updated successfully",
-            product: updated
-        });
-    } catch (error) {
-        console.error("Error updating product:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
     }
+
+    return res.status(200).json({
+      success: true,
+      message: "Category updated successfully",
+      category: updated,
+    });
+  } catch (error) {
+    console.error("Error updating category:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 };
 
-// Delete Product (soft delete)
-const deleteProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const deleted = await Product.findByIdAndUpdate(
-            id,
-            { isActive: false },
-            { new: true }
-        );
-
-        if (!deleted) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found"
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Product deleted successfully"
-        });
-    } catch (error) {
-        console.error("Error deleting product:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
-
-// Get Low Stock Products
-const getLowStock = async (req, res) => {
-    try {
-        const products = await Product.find({
-            isActive: true,
-            $expr: { $lte: ['$quantity', '$lowStockAlert'] }
-        }).populate('category');
-
-        return res.status(200).json({
-            success: true,
-            count: products.length,
-            products
-        });
-    } catch (error) {
-        console.error("Error fetching low stock:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
-
-export { 
-    addProduct, 
-    getProducts, 
-    getProductById, 
-    updateProduct, 
-    deleteProduct,
-    getLowStock 
-};
+export { addCategory, getCategories, deleteCategory, editCategory };
