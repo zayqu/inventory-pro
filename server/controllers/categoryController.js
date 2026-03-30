@@ -22,10 +22,10 @@ const addCategory = async (req, res) => {
       });
     }
 
-    // Create new category
+    // Create new category - description defaults to empty string if not provided
     const newCategory = new Category({
       categoryName,
-      categoryDescription,
+      categoryDescription: categoryDescription || "",
     });
 
     await newCategory.save();
@@ -97,7 +97,10 @@ const editCategory = async (req, res) => {
 
     const updated = await Category.findByIdAndUpdate(
       id,
-      { categoryName, categoryDescription },
+      { 
+        categoryName, 
+        categoryDescription: categoryDescription || "" // Handle undefined/empty
+      },
       { new: true }
     );
 
