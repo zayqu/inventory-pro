@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { 
     MdSearch, 
@@ -14,6 +14,16 @@ import {
     MdError,
     MdInfo,
     MdAttachMoney,
+    MdFileDownload,
+    MdFileUpload,
+    MdMoreVert,
+    MdContentCopy,
+    MdVisibility,
+    MdTrendingUp,
+    MdTrendingDown,
+    MdImage,
+    MdRefresh,
+    MdSort,
 } from "react-icons/md";
 
 const formatTZS = (amount) => {
@@ -73,6 +83,35 @@ const Toast = ({ message, type, onClose }) => {
     );
 };
 
+// Quick Stats Component
+const QuickStats = ({ products }) => {
+    const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.costPrice), 0);
+    const totalProfit = products.reduce((sum, p) => sum + ((p.sellingPrice - p.costPrice) * p.quantity), 0);
+    const lowStock = products.filter(p => p.quantity <= (p.lowStockAlert || 10)).length;
+    const outOfStock = products.filter(p => p.quantity === 0).length;
+
+    return (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div className="bg-white p-3 rounded-xl border border-gray-100">
+                <p className="text-xs text-gray-500 mb-1">Total Items</p>
+                <p className="text-xl font-bold text-gray-900">{products.length}</p>
+            </div>
+            <div className="bg-white p-3 rounded-xl border border-gray-100">
+                <p className="text-xs text-gray-500 mb-1">Inventory Value</p>
+                <p className="text-xl font-bold text-emerald-600">{formatTZS(totalValue)}</p>
+            </div>
+            <div className="bg-white p-3 rounded-xl border border-gray-100">
+                <p className="text-xs text-gray-500 mb-1">Low Stock</p>
+                <p className="text-xl font-bold text-amber-600">{lowStock}</p>
+            </div>
+            <div className="bg-white p-3 rounded-xl border border-gray-100">
+                <p className="text-xs text-gray-500 mb-1">Out of Stock</p>
+                <p className="text-xl font-bold text-red-600">{outOfStock}</p>
+            </div>
+        </div>
+    );
+};
+
 const Products = () => {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -87,6 +126,14 @@ const Products = () => {
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [selectedItems, setSelectedItems] = useState([]);
     const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [showActionsMenu, setShowActionsMenu] = useState(false);
+    const [sortBy, setSortBy] = useState('name');
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [showQuickView, setShowQuickView] = useState(null);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importFile, setImportFile] = useState(null);
+    const [importErrors, setImportErrors] = useState([]);
+    const fileInputRef = useRef(null);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -109,10 +156,11 @@ const Products = () => {
         fetchCategories();
     }, []);
 
-    // Filter products locally
+    // Filter and sort products locally
     useEffect(() => {
         let filtered = [...products];
 
+        // Search filter
         if (searchQuery) {
             filtered = filtered.filter(p => {
                 const name = (p.name || "").toLowerCase();
@@ -123,6 +171,7 @@ const Products = () => {
             });
         }
 
+        // Category filter
         if (filterCategory) {
             filtered = filtered.filter(p => {
                 const catId = p.category?._id || p.category;
@@ -130,12 +179,46 @@ const Products = () => {
             });
         }
 
+        // Low stock filter
         if (showLowStock) {
             filtered = filtered.filter(p => p.quantity <= (p.lowStockAlert || 10));
         }
 
+        // Sort
+        filtered.sort((a, b) => {
+            let aVal, bVal;
+            
+            switch(sortBy) {
+                case 'name':
+                    aVal = (a.name || '').toLowerCase();
+                    bVal = (b.name || '').toLowerCase();
+                    break;
+                case 'quantity':
+                    aVal = a.quantity || 0;
+                    bVal = b.quantity || 0;
+                    break;
+                case 'price':
+                    aVal = a.sellingPrice || 0;
+                    bVal = b.sellingPrice || 0;
+                    break;
+                case 'profit':
+                    aVal = (a.sellingPrice - a.costPrice) || 0;
+                    bVal = (b.sellingPrice - b.costPrice) || 0;
+                    break;
+                default:
+                    aVal = a.name;
+                    bVal = b.name;
+            }
+
+            if (sortOrder === 'asc') {
+                return aVal > bVal ? 1 : -1;
+            } else {
+                return aVal < bVal ? 1 : -1;
+            }
+        });
+
         setFilteredProducts(filtered);
-    }, [searchQuery, filterCategory, showLowStock, products]);
+    }, [searchQuery, filterCategory, showLowStock, products, sortBy, sortOrder]);
 
     const showToast = (message, type = "success") => {
         setToast({ message, type });
@@ -150,7 +233,6 @@ const Products = () => {
 
             if (response.data.success) {
                 setProducts(response.data.products || []);
-                // Calculate low stock count
                 const lowStock = (response.data.products || []).filter(p => 
                     p.quantity <= (p.lowStockAlert || 10)
                 ).length;
@@ -187,14 +269,12 @@ const Products = () => {
         try {
             setLoading(true);
             
-            // Auto-generate SKU if not editing or if empty
             let sku = formData.sku;
             if (!editingProduct && !sku) {
                 const category = categories.find(c => c._id === formData.category);
                 sku = generateSKU(category?.categoryName || category?.name, formData.name);
             }
 
-            // Auto-generate Barcode if not editing or if empty
             let barcode = formData.barcode;
             if (!editingProduct && !barcode) {
                 barcode = generateBarcode();
@@ -254,7 +334,6 @@ const Products = () => {
         }
     };
 
-    // Bulk delete
     const handleBulkDelete = async () => {
         if (!window.confirm(`Delete ${selectedItems.length} products?`)) return;
         
@@ -273,11 +352,195 @@ const Products = () => {
         }
     };
 
-    // Toggle selection
     const toggleSelection = (id) => {
         setSelectedItems(prev => 
             prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
         );
+    };
+
+    const duplicateProduct = (product) => {
+        const category = categories.find(c => c._id === product.category?._id || c._id === product.category);
+        const newSku = generateSKU(category?.categoryName || category?.name, product.name);
+        const newBarcode = generateBarcode();
+        
+        setFormData({
+            name: `${product.name} (Copy)`,
+            sku: newSku,
+            barcode: newBarcode,
+            category: product.category?._id || product.category || "",
+            description: product.description || "",
+            costPrice: product.costPrice || "",
+            sellingPrice: product.sellingPrice || "",
+            quantity: "0",
+            lowStockAlert: product.lowStockAlert || "10",
+            supplier: product.supplier || "",
+            unit: product.unit || "pcs"
+        });
+        setEditingProduct(null);
+        setIsModalOpen(true);
+    };
+
+    // Export to Excel
+    const handleExport = () => {
+        const headers = ['Name', 'SKU', 'Barcode', 'Category', 'Description', 'Cost Price', 'Selling Price', 'Quantity', 'Unit', 'Low Stock Alert', 'Supplier'];
+        
+        const rows = filteredProducts.map(p => [
+            p.name || '',
+            p.sku || '',
+            p.barcode || '',
+            p.category?.categoryName || p.category?.name || '',
+            p.description || '',
+            p.costPrice || 0,
+            p.sellingPrice || 0,
+            p.quantity || 0,
+            p.unit || 'pcs',
+            p.lowStockAlert || 10,
+            p.supplier || ''
+        ]);
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `products_export_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        
+        showToast("Products exported successfully!");
+    };
+
+    // Download Import Template
+    const handleDownloadTemplate = () => {
+        const headers = ['Name*', 'Category*', 'Description', 'Cost Price*', 'Selling Price*', 'Quantity', 'Unit', 'Low Stock Alert', 'Supplier'];
+        const exampleRow = ['Coca Cola 500ml', 'Soft Drinks', 'Refreshing beverage', '1000', '1500', '100', 'pcs', '10', 'ABC Distributors'];
+        
+        const csvContent = [
+            headers.join(','),
+            exampleRow.map(cell => `"${cell}"`).join(',')
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'product_import_template.csv';
+        link.click();
+        
+        showToast("Template downloaded!", "info");
+    };
+
+    // Handle Import File Selection
+    const handleImportFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+            if (!validTypes.includes(file.type) && !file.name.endsWith('.csv')) {
+                showToast("Please upload a CSV or Excel file", "error");
+                return;
+            }
+            setImportFile(file);
+        }
+    };
+
+    // Process Import
+    const handleImport = async () => {
+        if (!importFile) {
+            showToast("Please select a file to import", "error");
+            return;
+        }
+
+        setLoading(true);
+        setImportErrors([]);
+
+        try {
+            const text = await importFile.text();
+            const lines = text.split('\n').filter(line => line.trim());
+            
+            if (lines.length < 2) {
+                showToast("File is empty or invalid", "error");
+                setLoading(false);
+                return;
+            }
+
+            const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+            const errors = [];
+            const successfulImports = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                try {
+                    const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
+                    const row = {};
+                    
+                    headers.forEach((header, index) => {
+                        row[header.replace('*', '')] = values[index] || '';
+                    });
+
+                    // Validate required fields
+                    if (!row.Name || !row.Category || !row['Cost Price'] || !row['Selling Price']) {
+                        errors.push(`Row ${i + 1}: Missing required fields`);
+                        continue;
+                    }
+
+                    // Find category
+                    const category = categories.find(c => 
+                        (c.categoryName || c.name || '').toLowerCase() === row.Category.toLowerCase()
+                    );
+
+                    if (!category) {
+                        errors.push(`Row ${i + 1}: Category "${row.Category}" not found`);
+                        continue;
+                    }
+
+                    // Generate SKU and Barcode
+                    const sku = generateSKU(category.categoryName || category.name, row.Name);
+                    const barcode = generateBarcode();
+
+                    const payload = {
+                        name: row.Name,
+                        sku,
+                        barcode,
+                        category: category._id,
+                        description: row.Description || '',
+                        costPrice: Number(row['Cost Price']) || 0,
+                        sellingPrice: Number(row['Selling Price']) || 0,
+                        quantity: Number(row.Quantity) || 0,
+                        unit: row.Unit || 'pcs',
+                        lowStockAlert: Number(row['Low Stock Alert']) || 10,
+                        supplier: row.Supplier || ''
+                    };
+
+                    const response = await axios.post(
+                        `${API_URL}/api/product/add`,
+                        payload,
+                        { headers: { Authorization: `Bearer ${localStorage.getItem("pos-token")}` } }
+                    );
+
+                    if (response.data.success) {
+                        successfulImports.push(row.Name);
+                    }
+                } catch (error) {
+                    errors.push(`Row ${i + 1}: ${error.response?.data?.message || 'Failed to import'}`);
+                }
+            }
+
+            setImportErrors(errors);
+            
+            if (successfulImports.length > 0) {
+                showToast(`Successfully imported ${successfulImports.length} products!`, "success");
+                fetchProducts();
+            }
+            
+            if (errors.length === 0) {
+                setShowImportModal(false);
+                setImportFile(null);
+            }
+        } catch (error) {
+            showToast("Failed to process import file", "error");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const openModal = (product = null) => {
@@ -332,12 +595,10 @@ const Products = () => {
         return { profit, margin };
     };
 
-    // Get initials for avatar
     const getInitials = (name) => {
         return name ? name.substring(0, 2).toUpperCase() : "PR";
     };
 
-    // Generate consistent color based on string
     const getColorClass = (str) => {
         const colors = [
             "bg-emerald-500",
@@ -360,7 +621,7 @@ const Products = () => {
         <div className="min-h-screen bg-gray-50/50 pb-20 md:pb-0">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
             
-            {/* Premium Header - Consistent with Categories */}
+            {/* Header */}
             <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100">
                 <div className="px-4 py-4 md:px-6 md:py-5">
                     <div className="flex items-center justify-between mb-4">
@@ -371,17 +632,85 @@ const Products = () => {
                                 {lowStockCount > 0 && ` • ${lowStockCount} low stock`}
                             </p>
                         </div>
-                        <button 
-                            onClick={() => openModal()} 
-                            className="flex items-center gap-1.5 bg-[#00c0c7] text-white px-3 py-2 md:px-4 md:py-2.5 rounded-xl hover:bg-[#00a8af] active:scale-95 transition-all shadow-lg shadow-[#00c0c7]/25"
-                        >
-                            <MdAdd size={18} />
-                            <span className="text-sm font-medium hidden sm:inline">Add New</span>
-                            <span className="text-sm font-medium sm:hidden">Add</span>
-                        </button>
+                        
+                        <div className="flex items-center gap-2">
+                            {/* Actions Menu */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowActionsMenu(!showActionsMenu)}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <MdMoreVert size={20} />
+                                </button>
+                                
+                                {showActionsMenu && (
+                                    <>
+                                        <div 
+                                            className="fixed inset-0 z-40" 
+                                            onClick={() => setShowActionsMenu(false)}
+                                        />
+                                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                                            <button
+                                                onClick={() => {
+                                                    handleDownloadTemplate();
+                                                    setShowActionsMenu(false);
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                                            >
+                                                <MdFileDownload size={18} />
+                                                Download Template
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setShowImportModal(true);
+                                                    setShowActionsMenu(false);
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                                            >
+                                                <MdFileUpload size={18} />
+                                                Import Products
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    handleExport();
+                                                    setShowActionsMenu(false);
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                                            >
+                                                <MdFileDownload size={18} />
+                                                Export to CSV
+                                            </button>
+                                            <div className="border-t border-gray-100 my-2" />
+                                            <button
+                                                onClick={() => {
+                                                    fetchProducts();
+                                                    setShowActionsMenu(false);
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                                            >
+                                                <MdRefresh size={18} />
+                                                Refresh Data
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                            
+                            <button 
+                                onClick={() => openModal()} 
+                                className="flex items-center gap-1.5 bg-[#00c0c7] text-white px-3 py-2 md:px-4 md:py-2.5 rounded-xl hover:bg-[#00a8af] active:scale-95 transition-all shadow-lg shadow-[#00c0c7]/25"
+                            >
+                                <MdAdd size={18} />
+                                <span className="text-sm font-medium hidden sm:inline">Add New</span>
+                                <span className="text-sm font-medium sm:hidden">Add</span>
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Search Bar - Consistent with Categories */}
+                    {/* Quick Stats */}
+                    <QuickStats products={products} />
+
+                    {/* Search Bar */}
                     <div className="relative mb-3">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <MdSearch className="h-5 w-5 text-gray-400" />
@@ -403,7 +732,7 @@ const Products = () => {
                         )}
                     </div>
                     
-                    {/* Filters */}
+                    {/* Filters & Sort */}
                     <div className="flex gap-2 overflow-x-auto pb-1">
                         <select
                             value={filterCategory}
@@ -415,6 +744,24 @@ const Products = () => {
                                 <option key={cat._id} value={cat._id}>{cat.categoryName || cat.name}</option>
                             ))}
                         </select>
+                        
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[#00c0c7]/20 focus:outline-none"
+                        >
+                            <option value="name">Sort: Name</option>
+                            <option value="quantity">Sort: Stock</option>
+                            <option value="price">Sort: Price</option>
+                            <option value="profit">Sort: Profit</option>
+                        </select>
+                        
+                        <button
+                            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium flex items-center gap-1"
+                        >
+                            {sortOrder === 'asc' ? <MdTrendingUp size={16} /> : <MdTrendingDown size={16} />}
+                        </button>
                         
                         <button
                             onClick={() => setShowLowStock(!showLowStock)}
@@ -450,7 +797,7 @@ const Products = () => {
                 </div>
             )}
 
-            {/* Products List - Consistent with Categories */}
+            {/* Products List */}
             <div className="px-4 py-4 md:px-6 md:py-6 max-w-7xl mx-auto">
                 {filteredProducts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center">
@@ -510,7 +857,6 @@ const Products = () => {
                                             ${isSelected ? 'bg-[#00c0c7]/5 border-l-4 border-l-[#00c0c7]' : 'border-l-4 border-l-transparent'}
                                         `}
                                     >
-                                        {/* Selection Checkbox */}
                                         {isSelectionMode && (
                                             <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                                 <div className={`
@@ -522,7 +868,6 @@ const Products = () => {
                                             </div>
                                         )}
 
-                                        {/* Avatar */}
                                         <div className={`
                                             flex-shrink-0 w-12 h-12 md:w-10 md:h-10 rounded-xl ${colorClass} 
                                             flex items-center justify-center text-white font-bold text-sm md:text-xs shadow-sm
@@ -530,9 +875,7 @@ const Products = () => {
                                             {getInitials(product.name)}
                                         </div>
 
-                                        {/* Content */}
                                         <div className="flex-1 min-w-0 grid md:grid-cols-12 gap-1 md:gap-4 items-center">
-                                            {/* Product Name & SKU */}
                                             <div className="md:col-span-3 min-w-0">
                                                 <h3 className="text-sm md:text-base font-semibold text-gray-900 truncate group-hover:text-[#00c0c7] transition-colors">
                                                     {product.name}
@@ -540,14 +883,12 @@ const Products = () => {
                                                 <p className="text-xs text-gray-500 truncate mt-0.5">SKU: {product.sku}</p>
                                             </div>
                                             
-                                            {/* Category - Desktop */}
                                             <div className="hidden md:block md:col-span-2">
                                                 <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">
                                                     {product.category?.categoryName || product.category?.name || 'N/A'}
                                                 </span>
                                             </div>
 
-                                            {/* Stock Status - Desktop */}
                                             <div className="hidden md:block md:col-span-2">
                                                 <div className={`inline-block px-2 py-1 rounded-lg text-xs font-medium ${stockStatus.color}`}>
                                                     {stockStatus.text}
@@ -555,19 +896,16 @@ const Products = () => {
                                                 <p className="text-xs text-gray-500 mt-1">{product.quantity} {product.unit}</p>
                                             </div>
 
-                                            {/* Price - Desktop */}
                                             <div className="hidden md:block md:col-span-2">
                                                 <p className="text-sm font-semibold text-emerald-600">{formatTZS(product.sellingPrice)}</p>
                                                 <p className="text-xs text-gray-500">Cost: {formatTZS(product.costPrice)}</p>
                                             </div>
 
-                                            {/* Profit - Desktop */}
                                             <div className="hidden md:block md:col-span-2">
                                                 <p className="text-sm font-semibold text-gray-900">{formatTZS(profit.profit)}</p>
                                                 <p className="text-xs text-gray-500">{profit.margin}% margin</p>
                                             </div>
 
-                                            {/* Mobile Info */}
                                             <div className="md:hidden grid grid-cols-3 gap-2 col-span-full mt-2">
                                                 <div>
                                                     <p className="text-xs text-gray-500">Stock</p>
@@ -583,25 +921,45 @@ const Products = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Desktop Actions */}
                                             <div className="hidden md:flex md:col-span-1 justify-end gap-1">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setShowQuickView(product); }}
+                                                    className="p-2 text-gray-400 hover:text-[#00c0c7] hover:bg-[#00c0c7]/10 rounded-lg transition-all"
+                                                    title="Quick View"
+                                                >
+                                                    <MdVisibility size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); duplicateProduct(product); }}
+                                                    className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+                                                    title="Duplicate"
+                                                >
+                                                    <MdContentCopy size={18} />
+                                                </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); openModal(product); }}
                                                     className="p-2 text-gray-400 hover:text-[#00c0c7] hover:bg-[#00c0c7]/10 rounded-lg transition-all"
+                                                    title="Edit"
                                                 >
                                                     <MdEdit size={18} />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDelete(product._id); }}
                                                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Delete"
                                                 >
                                                     <MdDelete size={18} />
                                                 </button>
                                             </div>
                                         </div>
 
-                                        {/* Mobile Actions */}
                                         <div className="md:hidden flex items-center gap-1 text-gray-300">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setShowQuickView(product); }}
+                                                className="p-2 hover:text-[#00c0c7] active:scale-90 transition-all"
+                                            >
+                                                <MdVisibility size={20} />
+                                            </button>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); openModal(product); }}
                                                 className="p-2 hover:text-[#00c0c7] active:scale-90 transition-all"
@@ -631,11 +989,190 @@ const Products = () => {
                 <MdAdd size={24} />
             </button>
 
-            {/* Add/Edit Modal - Consistent with Categories */}
+            {/* Quick View Modal */}
+            {showQuickView && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200 p-4">
+                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-100">
+                            <h2 className="text-lg md:text-xl font-bold text-gray-900">Product Details</h2>
+                            <button
+                                onClick={() => setShowQuickView(null)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <MdClose className="text-gray-400 w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-4 md:p-6 space-y-4">
+                            <div>
+                                <p className="text-xs text-gray-500 mb-1">Product Name</p>
+                                <p className="text-base font-semibold text-gray-900">{showQuickView.name}</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">SKU</p>
+                                    <p className="text-sm text-gray-900">{showQuickView.sku}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">Barcode</p>
+                                    <p className="text-sm text-gray-900">{showQuickView.barcode}</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p className="text-xs text-gray-500 mb-1">Category</p>
+                                <p className="text-sm text-gray-900">{showQuickView.category?.categoryName || showQuickView.category?.name}</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">Cost Price</p>
+                                    <p className="text-base font-semibold text-gray-900">{formatTZS(showQuickView.costPrice)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">Selling Price</p>
+                                    <p className="text-base font-semibold text-emerald-600">{formatTZS(showQuickView.sellingPrice)}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">Stock</p>
+                                    <p className="text-base font-semibold text-gray-900">{showQuickView.quantity} {showQuickView.unit}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">Profit</p>
+                                    <p className="text-base font-semibold text-emerald-600">
+                                        {formatTZS(showQuickView.sellingPrice - showQuickView.costPrice)}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">Margin</p>
+                                    <p className="text-base font-semibold text-gray-900">
+                                        {calculateProfit(showQuickView.costPrice, showQuickView.sellingPrice).margin}%
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            {showQuickView.description && (
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">Description</p>
+                                    <p className="text-sm text-gray-900">{showQuickView.description}</p>
+                                </div>
+                            )}
+                            
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    onClick={() => {
+                                        setShowQuickView(null);
+                                        openModal(showQuickView);
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-[#00c0c7] text-white rounded-xl hover:bg-[#00a8af] transition-colors font-medium text-sm"
+                                >
+                                    Edit Product
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Import Modal */}
+            {showImportModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200 p-4">
+                    <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+                            <h2 className="text-lg md:text-xl font-bold text-gray-900">Import Products</h2>
+                            <button
+                                onClick={() => {
+                                    setShowImportModal(false);
+                                    setImportFile(null);
+                                    setImportErrors([]);
+                                }}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <MdClose className="text-gray-400 w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-4 md:p-6 space-y-4">
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                <p className="text-sm text-blue-900 mb-2 font-medium">📋 Import Instructions:</p>
+                                <ul className="text-xs text-blue-800 space-y-1 list-disc list-inside">
+                                    <li>Download the template first</li>
+                                    <li>Fill in product details (Name, Category, Cost Price, Selling Price are required)</li>
+                                    <li>Category names must match existing categories</li>
+                                    <li>SKU and Barcode will be auto-generated</li>
+                                    <li>Upload the completed CSV file</li>
+                                </ul>
+                            </div>
+                            
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".csv,.xlsx,.xls"
+                                onChange={handleImportFileChange}
+                                className="hidden"
+                            />
+                            
+                            <div className="space-y-3">
+                                <button
+                                    onClick={handleDownloadTemplate}
+                                    className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                                >
+                                    <MdFileDownload size={18} />
+                                    Download Template
+                                </button>
+                                
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-full px-4 py-3 bg-white border-2 border-dashed border-gray-300 text-gray-700 rounded-xl hover:border-[#00c0c7] hover:bg-[#00c0c7]/5 transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                                >
+                                    <MdFileUpload size={18} />
+                                    {importFile ? importFile.name : 'Choose File'}
+                                </button>
+                            </div>
+                            
+                            {importErrors.length > 0 && (
+                                <div className="bg-red-50 border border-red-200 rounded-xl p-4 max-h-48 overflow-y-auto">
+                                    <p className="text-sm text-red-900 font-medium mb-2">❌ Import Errors:</p>
+                                    <ul className="text-xs text-red-800 space-y-1">
+                                        {importErrors.map((error, index) => (
+                                            <li key={index}>• {error}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                            
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    onClick={() => {
+                                        setShowImportModal(false);
+                                        setImportFile(null);
+                                        setImportErrors([]);
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleImport}
+                                    disabled={!importFile || loading}
+                                    className="flex-1 px-4 py-3 bg-[#00c0c7] text-white rounded-xl hover:bg-[#00a8af] transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? "Importing..." : "Import"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add/Edit Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200 p-4">
                     <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-                        {/* Modal Header */}
                         <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
                             <h2 className="text-lg md:text-xl font-bold text-gray-900">
                                 {editingProduct ? "Edit Product" : "New Product"}
@@ -648,7 +1185,6 @@ const Products = () => {
                             </button>
                         </div>
                         
-                        {/* Modal Body */}
                         <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="md:col-span-2">
@@ -811,7 +1347,6 @@ const Products = () => {
                                 </div>
                             </div>
                             
-                            {/* Modal Footer */}
                             <div className="flex gap-3 pt-4 sticky bottom-0 bg-white pb-2">
                                 <button
                                     type="button"
