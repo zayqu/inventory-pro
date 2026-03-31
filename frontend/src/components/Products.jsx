@@ -9,7 +9,7 @@ import {
     MdInventory,
     MdWarning,
     MdFilterList,
-    MdBarcode,
+    MdQrCode,
     MdAttachMoney
 } from "react-icons/md";
 
@@ -379,7 +379,7 @@ const Products = () => {
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Barcode</label>
                                     <div className="relative">
-                                        <MdBarcode className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                        <MdQrCode className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                         <input
                                             type="text"
                                             value={formData.barcode}
