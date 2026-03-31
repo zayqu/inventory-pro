@@ -12,6 +12,9 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Use environment variable or fallback to localhost
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -19,7 +22,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "https://inventory-pro-api-4jnw.onrender.com/api/auth/login",
+        `${API_URL}/api/auth/login`,
         { email, password }
       );
 
@@ -33,11 +36,13 @@ const Login = () => {
         }
 
         localStorage.setItem("pos-token", response.data.token);
-
         login(userData, response.data.token);
 
-        if (userData.role === "admin") {
+        // Redirect based on role
+        if (userData.role === "admin" || userData.role === "manager") {
           navigate("/admin");
+        } else if (userData.role === "cashier") {
+          navigate("/cashier");
         } else if (userData.role === "customer") {
           navigate("/customer");
         } else {
@@ -55,11 +60,11 @@ const Login = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#0F1C2B] p-4">
-      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 md:p-10 space-y-6">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-[#1AD6D0] tracking-wide">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-6">
+        <h1 className="text-3xl font-bold text-center text-[#1AD6D0] tracking-wide">
           DARAJA
         </h1>
-        <p className="text-center text-sm sm:text-base text-gray-500 -mt-3">
+        <p className="text-center text-sm text-gray-500">
           Stock Management System
         </p>
 
@@ -77,10 +82,11 @@ const Login = () => {
             <input
               type="email"
               id="email"
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter email"
               required
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1AD6D0] focus:border-[#1AD6D0] outline-none transition-all"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1AD6D0] outline-none"
             />
           </div>
 
@@ -92,15 +98,16 @@ const Login = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
+                value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1AD6D0] focus:border-[#1AD6D0] outline-none transition-all"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1AD6D0] outline-none"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3 text-gray-500 text-sm hover:text-[#1AD6D0] transition-colors"
+                className="absolute inset-y-0 right-3 text-gray-500 text-sm hover:text-[#1AD6D0]"
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
@@ -108,17 +115,15 @@ const Login = () => {
           </div>
 
           <div className="flex justify-end">
-            <a
-              href="#"
-              className="text-sm text-[#1AD6D0] hover:text-[#14b5af] transition-colors"
-            >
+            <a href="#" className="text-sm text-[#1AD6D0] hover:text-[#14b5af]">
               Forgot password?
             </a>
           </div>
 
           <button
             type="submit"
-            className="w-full bg-[#1AD6D0] text-[#0F1C2B] py-2.5 rounded-lg font-semibold hover:bg-[#14b5af] transition-all"
+            disabled={loading}
+            className="w-full bg-[#1AD6D0] text-[#0F1C2B] py-2.5 rounded-lg font-semibold hover:bg-[#14b5af] transition-all disabled:opacity-50"
           >
             {loading ? "Logging in..." : "Log In"}
           </button>

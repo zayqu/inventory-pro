@@ -12,7 +12,7 @@ const app = express();
 
 // CORS (frontend access) - Fixed URL (no trailing space)
 app.use(cors({
-  origin: 'https://inventory-pro-two.vercel.app',
+  origin: ['https://inventory-pro-two.vercel.app', 'http://localhost:5173'],
   credentials: true
 }));
 
